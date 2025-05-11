@@ -1,0 +1,44 @@
+@model IEnumerable<VeterinariaSystem.Models.Turno>
+
+@{
+    ViewData["Title"] = "Turnos";
+}
+
+<h2>Turnos</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <th>@Html.DisplayNameFor(model => model.Mascota.Nombre)</th>
+            <th>@Html.DisplayNameFor(model => model.Motivo)</th>
+            <th>@Html.DisplayNameFor(model => model.Fecha)</th>
+            <th>@Html.DisplayNameFor(model => model.Hora)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var turno in Model)
+        {
+            <tr>
+                <td>@turno.Id</td>
+                <td>@turno.Mascota.Nombre</td>
+                <td>@turno.Motivo</td>
+                <td>@turno.Fecha.ToString("dd/MM/yyyy")</td>
+                <td>@turno.Hora.ToString(@"hh\:mm")</td>
+                <td>
+                    <a href="@Url.Action("Detalles", "Turno", new { id = turno.Id })">Detalles</a> |
+                    <a href="@Url.Action("Editar", "Turno", new { id = turno.Id })">Editar</a> |
+                    <a href="@Url.Action("Eliminar", "Turno", new { id = turno.Id })">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div>
+    <a href="@Url.Action("Crear", "Turno")">Crear nuevo</a>
+    <a href="@Url.Action("Index", "Mascota")">Volver a Mascotas</a>
+    <a href="@Url.Action("BuscarPorFecha")">Buscar Turnos por fecha</a>
+    <a href="@Url.Action("BuscarPorMascota")">Buscar Turnos por Mascota</a>
+    <a href="@Url.Action("ObtenerPorMascota")">Buscar Todos los Turnos por Mascota</a>
+</div>
