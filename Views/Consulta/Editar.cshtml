@@ -35,6 +35,7 @@
 
     <div class="form-group">
         <label for="ArchivoNuevo">Archivo Adjunto (opcional)</label>
+        <input type="hidden" asp-for="ArchivoAdjunto" />
         <input type="file" name="ArchivoNuevo" class="form-control" />
         @if (!string.IsNullOrEmpty(Model.ArchivoAdjunto))
         {
@@ -44,11 +45,17 @@
 
     <div class="form-group">
         <label>Mascota</label>
+
+        <input type="hidden" asp-for="Id_Mascota" />
+
         <input class="form-control" value="@Model.Mascota?.Nombre" readonly />
     </div>
 
     <div class="form-group">
         <label>Veterinario</label>
+
+        <input type="hidden" asp-for="Id_Veterinario" />
+
         <input class="form-control" value="@($"{Model.Veterinario?.Nombre} {Model.Veterinario?.Apellido}")" readonly />
     </div>
 
@@ -56,6 +63,7 @@
     {
         <div class="form-group">
             <label>Turno Nº</label>
+            <input type="hidden" asp-for="Id_Turno" />
             <input class="form-control" value="@Model.Id_Turno" readonly />
         </div>
     }

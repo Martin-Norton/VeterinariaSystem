@@ -19,6 +19,7 @@ public class RepositorioConsulta : RepositorioBase, IRepositorioConsulta
         command.Parameters.AddWithValue("@diagnostico", consulta.Diagnostico ?? "");
         command.Parameters.AddWithValue("@tratamiento", consulta.Tratamiento ?? "");
         command.Parameters.AddWithValue("@archivo", consulta.ArchivoAdjunto ?? "");
+        Console.WriteLine("Ruta archivo adjunto: " + consulta.ArchivoAdjunto);
         command.Parameters.AddWithValue("@id_mascota", consulta.Id_Mascota);
         command.Parameters.AddWithValue("@id_veterinario", consulta.Id_Veterinario);
         connection.Open();

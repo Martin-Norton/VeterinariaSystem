@@ -33,7 +33,7 @@
 
     <div class="form-group">
         <label asp-for="ArchivoAdjunto" class="control-label"></label>
-        <input asp-for="ArchivoAdjunto" class="form-control" type="file" />
+        <input  name="Archivo" asp-for="ArchivoAdjunto" class="form-control" type="file" />
     </div>
 
     <div class="form-group">
@@ -48,7 +48,7 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="Id_Mascota" class="control-label"></label>
+        <label asp-for="Id_Mascota" class="control-label"> Mascota </label>
         <select asp-for="Id_Mascota" class="form-control" id="Id_Mascota">
             <option value="">Seleccione una mascota</option>
         </select>

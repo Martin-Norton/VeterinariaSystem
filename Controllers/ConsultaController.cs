@@ -63,15 +63,15 @@ public class ConsultaController : Controller
         return View(consulta);
     }
     [HttpPost]
-    public IActionResult Editar(int id, Consulta consulta, IFormFile ArchivoNuevo)
+    public IActionResult Editar(int id, Consulta consulta, IFormFile? ArchivoNuevo)
     {
         if (id != consulta.Id)
         {
             return NotFound();
         }
-
-        ModelState.Remove("Veterinario");
         ModelState.Remove("Mascota");
+        ModelState.Remove("Veterinario");
+
         if (ModelState.IsValid)
         {
             try
@@ -87,6 +87,21 @@ public class ConsultaController : Controller
                     }
 
                     consulta.ArchivoAdjunto = nombreArchivo;
+
+                    var consultaAnterior = repo.ObtenerPorId(id);
+                    if (!string.IsNullOrEmpty(consultaAnterior.ArchivoAdjunto))
+                    {
+                        var rutaAnterior = Path.Combine(environment.WebRootPath, "archivos", consultaAnterior.ArchivoAdjunto);
+                        if (System.IO.File.Exists(rutaAnterior))
+                        {
+                            System.IO.File.Delete(rutaAnterior);
+                        }
+                    }
+                }
+                else
+                {
+                    var consultaExistente = repo.ObtenerPorId(id);
+                    consulta.ArchivoAdjunto = consultaExistente?.ArchivoAdjunto;
                 }
 
                 repo.Modificacion(consulta);
@@ -97,10 +112,12 @@ public class ConsultaController : Controller
                 ModelState.AddModelError("", "Error al guardar la consulta: " + ex.Message);
             }
         }
+
         consulta.Mascota = repoMascota.ObtenerPorId(consulta.Id_Mascota);
         consulta.Veterinario = repoVeterinario.ObtenerPorId(consulta.Id_Veterinario);
         return View(consulta);
     }
+
 
     public IActionResult Crear()
     {
@@ -148,7 +165,11 @@ public class ConsultaController : Controller
             if (Archivo != null && Archivo.Length > 0)
             {
                 var nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(Archivo.FileName);
-                var rutaCarpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "archivos");
+                var rutaCarpeta = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "archivos"
+                );
                 var rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
 
                 if (!Directory.Exists(rutaCarpeta))
@@ -171,8 +192,18 @@ public class ConsultaController : Controller
             .ObtenerTodos()
             .Select(v => new { Id = v.Id, NombreCompleto = v.Nombre + " " + v.Apellido })
             .ToList();
-        ViewBag.Veterinarios = new SelectList(veterinarios, "Id", "NombreCompleto", consulta.Id_Veterinario);
-        ViewBag.Mascotas = new SelectList(repoMascota.ObtenerTodos(), "Id", "Nombre");
+        ViewBag.Veterinarios = new SelectList(veterinarios, "Id", "NombreCompleto");
+        var duenos = repoDueno
+        .ObtenerTodos()
+        .Select(d => new SelectListItem
+        {
+            Value = d.Id.ToString(),
+            Text = d.Nombre + " " + d.Apellido
+        })
+        .ToList();
+        ViewBag.Duenos = new SelectList(duenos, "Value", "Text");
+
+        ViewBag.Mascotas = new SelectList(new List<Mascota>(), "Id", "Nombre");
 
         return View(consulta.Id_Turno != null ? "CrearDesdeTurno" : "Crear", consulta);
     }
