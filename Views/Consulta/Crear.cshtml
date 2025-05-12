@@ -34,15 +34,24 @@
     <div class="form-group">
         <label asp-for="ArchivoAdjunto" class="control-label"></label>
         <input asp-for="ArchivoAdjunto" class="form-control" type="file" />
-        <span asp-validation-for="ArchivoAdjunto" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label asp-for="Id_Mascota" class="control-label">Mascota</label>
-        <select asp-for="Id_Mascota" class="form-control" asp-items="ViewBag.Mascotas">
+        <label class="control-label"></label>
+        <select class="form-control" id="Id_Dueno">
+            <option value="">Seleccione un dueño</option>
+            @foreach (var item in ViewBag.Duenos as SelectList)
+            {
+                <option value="@item.Value">@item.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Id_Mascota" class="control-label"></label>
+        <select asp-for="Id_Mascota" class="form-control" id="Id_Mascota">
             <option value="">Seleccione una mascota</option>
         </select>
-        <span asp-validation-for="Id_Mascota" class="text-danger"></span>
     </div>
 
     <div class="form-group">
@@ -62,3 +71,27 @@
     <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </div>
 
+@section Scripts {
+    
+    <script>
+        $("#Id_Dueno").change(function() {
+            var idDueno = $(this).val();
+            if (idDueno) {
+                $.ajax({
+                    url: '@Url.Action("ObtenerMascotasPorDueno", "Consulta")', // aca se usa ajax para obtener las mascotas por dueño
+                    data: { idDueno: idDueno },
+                    success: function(data) {
+                        var mascotaSelect = $("#Id_Mascota");
+                        mascotaSelect.empty();
+                        mascotaSelect.append('<option value="">Seleccione una mascota</option>');
+                        $.each(data, function(i, item) {
+                            mascotaSelect.append('<option value="' + item.id + '">' + item.nombre + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $("#Id_Mascota").empty().append('<option value="">Seleccione una mascota</option>');
+            }
+        });
+    </script>
+}

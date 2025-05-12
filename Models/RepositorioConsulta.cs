@@ -66,7 +66,7 @@ public class RepositorioConsulta : RepositorioBase, IRepositorioConsulta
         return consulta;
     }
 
-    public IEnumerable<Consulta> ObtenerTodos()
+    public IList<Consulta> ObtenerTodos()
     {
         var lista = new List<Consulta>();
         using var connection = new MySqlConnection(connectionString);
