@@ -16,5 +16,11 @@ namespace VeterinariaSystem.Models
         Turno ObtenerPorMascotaYFecha(int idMascota, DateTime fecha);
         bool ExisteTurnoEnHorario(DateTime fecha, TimeSpan hora);
         bool ExisteTurnoParaMascotaEnDia(int idMascota, DateTime fecha);
+        IList<Turno> ObtenerPaginadas(int pagina, int tamaño);
+        int ObtenerCantidad();
+        int ObtenerCantidadPorMascota(int idMascota);
+        IList<Turno> ObtenerPorMascotaPaginado(int idMascota, int pagina, int tamaño);
+        int ObtenerCantidadPorFecha(DateTime fecha);
+        IList<Turno> ObtenerPorFechaPaginado(DateTime fecha, int pagina, int tamaño);
     }
 }

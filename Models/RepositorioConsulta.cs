@@ -113,4 +113,195 @@ public class RepositorioConsulta : RepositorioBase, IRepositorioConsulta
         connection.Open();
         return command.ExecuteNonQuery();
     }
+    public IList<Consulta> ObtenerPaginadas(int pagina, int tamaño)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var consultas = new List<Consulta>();
+            var offset = (pagina - 1) * tamaño;
+            var sql = @"SELECT * FROM Consulta ORDER BY Fecha DESC LIMIT @tamaño OFFSET @offset";
+            var command = new MySqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@tamaño", tamaño);
+            command.Parameters.AddWithValue("@offset", offset);
+            connection.Open();
+            var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var consulta = new Consulta
+                {
+                    Id = reader.GetInt32("Id"),
+                    Fecha = reader.GetDateTime("Fecha"),
+                    Motivo = reader.GetString("Motivo"),
+                    Diagnostico = reader.GetString("Diagnostico"),
+                    Tratamiento = reader.GetString("Tratamiento"),
+                    ArchivoAdjunto = reader["ArchivoAdjunto"] != DBNull.Value ? reader.GetString("ArchivoAdjunto") : null,
+                    Id_Mascota = reader.GetInt32("Id_Mascota"),
+                    Id_Veterinario = reader.GetInt32("Id_Veterinario"),
+                    Id_Turno = reader["Id_Turno"] != DBNull.Value ? reader.GetInt32("Id_Turno") : (int?)null
+                };
+                consultas.Add(consulta);
+            }
+            return consultas;
+        }
+    }
+
+    public int ObtenerCantidad()
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var sql = "SELECT COUNT(*) FROM Consulta";
+            var command = new MySqlCommand(sql, connection);
+            connection.Open();
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+    }
+//zona busquedas
+    public IList<Consulta> BuscarPorMascotaPaginado(int idMascota, int pagina, int tamaño)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var consultas = new List<Consulta>();
+            var offset = (pagina - 1) * tamaño;
+            var sql = @"
+                SELECT * FROM Consulta
+                WHERE Id_Mascota = @idMascota
+                ORDER BY Fecha DESC
+                LIMIT @tamaño OFFSET @offset;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@idMascota", idMascota);
+                command.Parameters.AddWithValue("@tamaño", tamaño);
+                command.Parameters.AddWithValue("@offset", offset);
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        consultas.Add(MapConsulta(reader));
+                    }
+                }
+            }
+            return consultas;
+        }
+    }
+
+    public int ObtenerCantidadPorMascota(int idMascota)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var sql = "SELECT COUNT(*) FROM Consulta WHERE Id_Mascota = @idMascota;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@idMascota", idMascota);
+                connection.Open();
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+    }
+
+    public IList<Consulta> BuscarPorVeterinarioPaginado(int idVeterinario, int pagina, int tamaño)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var consultas = new List<Consulta>();
+            var offset = (pagina - 1) * tamaño;
+            var sql = @"
+                SELECT * FROM Consulta
+                WHERE Id_Veterinario = @idVeterinario
+                ORDER BY Fecha DESC
+                LIMIT @tamaño OFFSET @offset;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@idVeterinario", idVeterinario);
+                command.Parameters.AddWithValue("@tamaño", tamaño);
+                command.Parameters.AddWithValue("@offset", offset);
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        consultas.Add(MapConsulta(reader));
+                    }
+                }
+            }
+            return consultas;
+        }
+    }
+
+    public int ObtenerCantidadPorVeterinario(int idVeterinario)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var sql = "SELECT COUNT(*) FROM Consulta WHERE Id_Veterinario = @idVeterinario;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@idVeterinario", idVeterinario);
+                connection.Open();
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+    }
+
+    public IList<Consulta> BuscarPorFechasPaginado(DateTime fechaInicio, DateTime fechaFin, int pagina, int tamaño)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var consultas = new List<Consulta>();
+            var offset = (pagina - 1) * tamaño;
+            var sql = @"
+                SELECT * FROM Consulta
+                WHERE Fecha >= @fechaInicio AND Fecha <= @fechaFin
+                ORDER BY Fecha DESC
+                LIMIT @tamaño OFFSET @offset;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@fechaInicio", fechaInicio.Date);
+                command.Parameters.AddWithValue("@fechaFin", fechaFin.Date.AddDays(1).AddSeconds(-1));
+                command.Parameters.AddWithValue("@tamaño", tamaño);
+                command.Parameters.AddWithValue("@offset", offset);
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        consultas.Add(MapConsulta(reader));
+                    }
+                }
+            }
+            return consultas;
+        }
+    }
+
+    public int ObtenerCantidadPorFechas(DateTime fechaInicio, DateTime fechaFin)
+    {
+        using (var connection = new MySqlConnection(connectionString))
+        {
+            var sql = "SELECT COUNT(*) FROM Consulta WHERE Fecha >= @fechaInicio AND Fecha <= @fechaFin;";
+            using (var command = new MySqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@fechaInicio", fechaInicio.Date);
+                command.Parameters.AddWithValue("@fechaFin", fechaFin.Date.AddDays(1).AddSeconds(-1));
+                connection.Open();
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+    }
+
+    private Consulta MapConsulta(MySqlDataReader reader)
+    {
+        return new Consulta
+        {
+            Id = reader.GetInt32("Id"),
+            Fecha = reader.GetDateTime("Fecha"),
+            Motivo = reader.GetString("Motivo"),
+            Diagnostico = reader.GetString("Diagnostico"),
+            Tratamiento = reader.GetString("Tratamiento"),
+            ArchivoAdjunto = reader["ArchivoAdjunto"] != DBNull.Value ? reader.GetString("ArchivoAdjunto") : null,
+            Id_Mascota = reader.GetInt32("Id_Mascota"),
+            Id_Veterinario = reader.GetInt32("Id_Veterinario"),
+            Id_Turno = reader["Id_Turno"] != DBNull.Value ? reader.GetInt32("Id_Turno") : (int?)null
+        };
+    }
+//fin zona busquedas
+
 }

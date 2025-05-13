@@ -31,7 +31,7 @@
                 <td>
                     @if (!string.IsNullOrEmpty(consulta.ArchivoAdjunto))
                     {
-                        <a href="@Url.Content("~/archivos/" + consulta.ArchivoAdjunto)" target="_blank">Ver archivo</a>
+                        <a href="@Url.Content(consulta.ArchivoAdjunto)" target="_blank">Ver archivo</a>
                     }
                     else
                     {
@@ -50,3 +50,16 @@
     </tbody>
 </table>
 <a asp-action="SeleccionarTurno" class="btn btn-primary">Crear consulta</a>
+<a asp-action="Busquedas" class="btn btn-secondary">Buscar consultas</a>
+<div class="mt-4">
+    <nav>
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.Pagina ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pagina="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>

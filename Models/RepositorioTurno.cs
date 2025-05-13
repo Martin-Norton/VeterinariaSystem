@@ -216,7 +216,7 @@ namespace VeterinariaSystem.Models
             return lista;
         }
 
-         public IList<Turno> ObtenerPorMascota(int idMascota)
+        public IList<Turno> ObtenerPorMascota(int idMascota)
         {
             IList<Turno> lista = new List<Turno>();
             using (var connection = new MySqlConnection(connectionString))
@@ -343,5 +343,244 @@ namespace VeterinariaSystem.Models
             }
             return existe;
         }
+    // Zona paginado
+        public IList<Turno> ObtenerPaginadas(int pagina, int tamaño)
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                var turnos = new List<Turno>();
+                var offset = (pagina - 1) * tamaño;
+                var sql = @"
+                    SELECT
+                        t.Id AS TurnoId,
+                        t.Id_Mascota AS TurnoIdMascota,
+                        t.Motivo AS TurnoMotivo,
+                        t.Fecha AS TurnoFecha,
+                        t.Hora AS TurnoHora,
+                        t.Estado AS TurnoEstado,
+                        m.Id AS MascotaId,
+                        m.Nombre AS MascotaNombre,
+                        m.Especie AS MascotaEspecie,
+                        m.Raza AS MascotaRaza,
+                        m.Edad AS MascotaEdad,
+                        m.Peso AS MascotaPeso,
+                        m.Sexo AS MascotaSexo,
+                        m.Id_Dueno AS MascotaIdDueno
+                    FROM Turno t
+                    LEFT JOIN Mascota m ON t.Id_Mascota = m.Id
+                    ORDER BY t.Fecha DESC
+                    LIMIT @tamaño OFFSET @offset;";
+
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@tamaño", tamaño);
+                    command.Parameters.AddWithValue("@offset", offset);
+                    connection.Open();
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var turno = new Turno
+                            {
+                                Id = reader.GetInt32("TurnoId"),
+                                Id_Mascota = reader.GetInt32("TurnoIdMascota"),
+                                Motivo = reader.GetString("TurnoMotivo"),
+                                Fecha = reader.GetDateTime("TurnoFecha"),
+                                Hora = reader.GetTimeSpan("TurnoHora"),
+                                Estado = reader.GetInt32("TurnoEstado"),
+                                Mascota = new Mascota
+                                {
+                                    Id = reader.GetInt32("MascotaId"),
+                                    Nombre = reader.GetString("MascotaNombre"),
+                                    Especie = reader.GetString("MascotaEspecie"),
+                                    Raza = reader.IsDBNull("MascotaRaza") ? null : reader.GetString("MascotaRaza"),
+                                    Edad = reader.GetInt32("MascotaEdad"),
+                                    Peso = reader.GetInt32("MascotaPeso"),
+                                    Sexo = reader.GetString("MascotaSexo"),
+                                    Id_Dueno = reader.GetInt32("MascotaIdDueno")
+                                }
+                            };
+                            turnos.Add(turno);
+                        }
+                    }
+                    connection.Close();
+                }
+                return turnos;
+            }
+        }
+        public int ObtenerCantidad()
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                var sql = "SELECT COUNT(*) FROM Turno;";
+                var command = new MySqlCommand(sql, connection);
+                connection.Open();
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+
+        public IList<Turno> ObtenerPorFechaPaginado(DateTime fecha, int pagina, int tamaño)
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                var turnos = new List<Turno>();
+                var offset = (pagina - 1) * tamaño;
+                var sql = @"
+                    SELECT
+                        t.Id AS TurnoId,
+                        t.Id_Mascota AS TurnoIdMascota,
+                        t.Motivo AS TurnoMotivo,
+                        t.Fecha AS TurnoFecha,
+                        t.Hora AS TurnoHora,
+                        t.Estado AS TurnoEstado,
+                        m.Id AS MascotaId,
+                        m.Nombre AS MascotaNombre,
+                        m.Especie AS MascotaEspecie,
+                        m.Raza AS MascotaRaza,
+                        m.Edad AS MascotaEdad,
+                        m.Peso AS MascotaPeso,
+                        m.Sexo AS MascotaSexo,
+                        m.Id_Dueno AS MascotaIdDueno
+                    FROM Turno t
+                    LEFT JOIN Mascota m ON t.Id_Mascota = m.Id
+                    WHERE DATE(t.Fecha) = @fecha
+                    ORDER BY t.Hora
+                    LIMIT @tamaño OFFSET @offset;";
+
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@fecha", fecha.Date);
+                    command.Parameters.AddWithValue("@tamaño", tamaño);
+                    command.Parameters.AddWithValue("@offset", offset);
+                    connection.Open();
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var turno = new Turno
+                            {
+                                Id = reader.GetInt32("TurnoId"),
+                                Id_Mascota = reader.GetInt32("TurnoIdMascota"),
+                                Motivo = reader.GetString("TurnoMotivo"),
+                                Fecha = reader.GetDateTime("TurnoFecha"),
+                                Hora = reader.GetTimeSpan("TurnoHora"),
+                                Estado = reader.GetInt32("TurnoEstado"),
+                                Mascota = new Mascota
+                                {
+                                    Id = reader.GetInt32("MascotaId"),
+                                    Nombre = reader.GetString("MascotaNombre"),
+                                    Especie = reader.GetString("MascotaEspecie"),
+                                    Raza = reader.IsDBNull("MascotaRaza") ? null : reader.GetString("MascotaRaza"),
+                                    Edad = reader.GetInt32("MascotaEdad"),
+                                    Peso = reader.GetInt32("MascotaPeso"),
+                                    Sexo = reader.GetString("MascotaSexo"),
+                                    Id_Dueno = reader.GetInt32("MascotaIdDueno")
+                                }
+                            };
+                            turnos.Add(turno);
+                        }
+                    }
+                    connection.Close();
+                }
+                return turnos;
+            }
+        }
+        public int ObtenerCantidadPorFecha(DateTime fecha)
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                string sql = "SELECT COUNT(*) FROM Turno WHERE DATE(Fecha) = @fecha;";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@fecha", fecha.Date);
+                    connection.Open();
+                    return Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
+        }
+        public IList<Turno> ObtenerPorMascotaPaginado(int idMascota, int pagina, int tamaño)
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                var turnos = new List<Turno>();
+                var offset = (pagina - 1) * tamaño;
+                var sql = @"
+                    SELECT
+                        t.Id AS TurnoId,
+                        t.Id_Mascota AS TurnoIdMascota,
+                        t.Motivo AS TurnoMotivo,
+                        t.Fecha AS TurnoFecha,
+                        t.Hora AS TurnoHora,
+                        t.Estado AS TurnoEstado,
+                        m.Id AS MascotaId,
+                        m.Nombre AS MascotaNombre,
+                        m.Especie AS MascotaEspecie,
+                        m.Raza AS MascotaRaza,
+                        m.Edad AS MascotaEdad,
+                        m.Peso AS MascotaPeso,
+                        m.Sexo AS MascotaSexo,
+                        m.Id_Dueno AS MascotaIdDueno
+                    FROM Turno t
+                    LEFT JOIN Mascota m ON t.Id_Mascota = m.Id
+                    WHERE t.Id_Mascota = @idMascota
+                    ORDER BY t.Fecha DESC, t.Hora
+                    LIMIT @tamaño OFFSET @offset;";
+
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@idMascota", idMascota);
+                    command.Parameters.AddWithValue("@tamaño", tamaño);
+                    command.Parameters.AddWithValue("@offset", offset);
+                    connection.Open();
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var turno = new Turno
+                            {
+                                Id = reader.GetInt32("TurnoId"),
+                                Id_Mascota = reader.GetInt32("TurnoIdMascota"),
+                                Motivo = reader.GetString("TurnoMotivo"),
+                                Fecha = reader.GetDateTime("TurnoFecha"),
+                                Hora = reader.GetTimeSpan("TurnoHora"),
+                                Estado = reader.GetInt32("TurnoEstado"),
+                                Mascota = new Mascota
+                                {
+                                    Id = reader.GetInt32("MascotaId"),
+                                    Nombre = reader.GetString("MascotaNombre"),
+                                    Especie = reader.GetString("MascotaEspecie"),
+                                    Raza = reader.IsDBNull("MascotaRaza") ? null : reader.GetString("MascotaRaza"),
+                                    Edad = reader.GetInt32("MascotaEdad"),
+                                    Peso = reader.GetInt32("MascotaPeso"),
+                                    Sexo = reader.GetString("MascotaSexo"),
+                                    Id_Dueno = reader.GetInt32("MascotaIdDueno")
+                                }
+                            };
+                            turnos.Add(turno);
+                        }
+                    }
+                    connection.Close();
+                }
+                return turnos;
+            }
+        }
+        public int ObtenerCantidadPorMascota(int idMascota)
+        {
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                string sql = "SELECT COUNT(*) FROM Turno WHERE Id_Mascota = @idMascota;";
+                using (var command = new MySqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@idMascota", idMascota);
+                    connection.Open();
+                    return Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
+        }
+    //FinZona Paginado
+        
     }
 }

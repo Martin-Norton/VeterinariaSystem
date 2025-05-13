@@ -28,14 +28,21 @@ public class ConsultaController : Controller
         this.environment = environment;
     }
 
-    public IActionResult Index()
+    public IActionResult Index(int pagina = 1)
     {
-        var consultas = repo.ObtenerTodos();
+        int tamaño = 5;
+        var consultas = repo.ObtenerPaginadas(pagina, tamaño);
+
         foreach (var consulta in consultas)
         {
             consulta.Mascota = repoMascota.ObtenerPorId(consulta.Id_Mascota);
             consulta.Veterinario = repoVeterinario.ObtenerPorId(consulta.Id_Veterinario);
         }
+
+        int total = repo.ObtenerCantidad();
+        ViewBag.Pagina = pagina;
+        ViewBag.TotalPaginas = (int)Math.Ceiling((double)total / tamaño);
+
         return View(consultas);
     }
 
@@ -326,4 +333,130 @@ public class ConsultaController : Controller
 
         return View("CrearDesdeTurno", consulta);
     }
+
+//Zona Busquedas
+
+    public IActionResult Busquedas()
+    {
+        return View();
+    }
+
+    public IActionResult BuscarPorMascota(int? idDueno, int? idMascota, int pagina = 1)
+    {
+        var duenos = repoDueno.ObtenerTodos()
+            .Select(d => new SelectListItem
+            {
+                Value = d.Id.ToString(),
+                Text = d.Nombre + " " + d.Apellido
+            })
+            .ToList();
+        ViewBag.Duenos = new SelectList(duenos, "Value", "Text");
+
+        if (idDueno.HasValue)
+        {
+            var mascotas = repoMascota.ObtenerPorDueno(idDueno.Value)
+                .Select(m => new SelectListItem
+                {
+                    Value = m.Id.ToString(),
+                    Text = m.Nombre
+                }).ToList();
+            ViewBag.Mascotas = new SelectList(mascotas, "Value", "Text");
+        }
+        else
+        {
+            ViewBag.Mascotas = new SelectList(new List<SelectListItem>());
+        }
+
+        if (!idMascota.HasValue)
+        {
+            ViewBag.Pagina = 1;
+            ViewBag.TotalPaginas = 0;
+            return View(new List<Consulta>());
+        }
+
+        int tamaño = 5;
+        var consultas = repo.BuscarPorMascotaPaginado(idMascota.Value, pagina, tamaño);
+        foreach (var consulta in consultas)
+        {
+            consulta.Mascota = repoMascota.ObtenerPorId(consulta.Id_Mascota);
+            consulta.Veterinario = repoVeterinario.ObtenerPorId(consulta.Id_Veterinario);
+        }
+
+        int total = repo.ObtenerCantidadPorMascota(idMascota.Value);
+        ViewBag.Pagina = pagina;
+        ViewBag.TotalPaginas = (int)Math.Ceiling((double)total / tamaño);
+        ViewBag.IdDuenoSeleccionado = idDueno;
+        ViewBag.IdMascotaSeleccionada = idMascota;
+
+        return View(consultas);
+    }
+
+
+    public IActionResult BuscarPorVeterinario(int? idVeterinario, int pagina = 1)
+    {
+        int tamaño = 5;
+        ViewBag.Veterinarios = repoVeterinario.ObtenerTodos().Select(v => new SelectListItem
+        {
+            Value = v.Id.ToString(),
+            Text = v.Nombre
+        }).ToList();
+
+        if (idVeterinario == null)
+        {
+            ViewBag.Pagina = 1;
+            ViewBag.TotalPaginas = 0;
+            return View();
+        }
+
+        var consultas = repo.BuscarPorVeterinarioPaginado(idVeterinario.Value, pagina, tamaño);
+        foreach (var consulta in consultas)
+        {
+            consulta.Mascota = repoMascota.ObtenerPorId(consulta.Id_Mascota);
+            consulta.Veterinario = repoVeterinario.ObtenerPorId(consulta.Id_Veterinario);
+        }
+
+        int total = repo.ObtenerCantidadPorVeterinario(idVeterinario.Value);
+        ViewBag.Pagina = pagina;
+        ViewBag.TotalPaginas = (int)Math.Ceiling((double)total / tamaño);
+        ViewBag.IdVeterinarioSeleccionado = idVeterinario.Value;
+
+        return View(consultas);
+    }
+
+    public IActionResult BuscarPorFechas(DateTime? fechaInicio, DateTime? fechaFin, int pagina = 1)
+    {
+        int tamaño = 5;
+
+        if (!fechaInicio.HasValue || !fechaFin.HasValue)
+        {
+            ViewBag.Mensaje = "Por favor, seleccione un rango de fechas.";
+            ViewBag.Pagina = 1;
+            ViewBag.TotalPaginas = 0;
+            return View();
+        }
+
+        if (fechaInicio > fechaFin)
+        {
+            ViewBag.Mensaje = "La fecha de inicio debe ser anterior a la fecha de fin.";
+            ViewBag.Pagina = 1;
+            ViewBag.TotalPaginas = 0;
+            return View();
+        }
+
+        var consultas = repo.BuscarPorFechasPaginado(fechaInicio.Value, fechaFin.Value, pagina, tamaño);
+        foreach (var consulta in consultas)
+        {
+            consulta.Mascota = repoMascota.ObtenerPorId(consulta.Id_Mascota);
+            consulta.Veterinario = repoVeterinario.ObtenerPorId(consulta.Id_Veterinario);
+        }
+
+        int total = repo.ObtenerCantidadPorFechas(fechaInicio.Value, fechaFin.Value);
+        ViewBag.Pagina = pagina;
+        ViewBag.TotalPaginas = (int)Math.Ceiling((double)total / tamaño);
+        ViewBag.FechaInicio = fechaInicio.Value.ToString("yyyy-MM-dd");
+        ViewBag.FechaFin = fechaFin.Value.ToString("yyyy-MM-dd");
+
+        return View(consultas);
+    }
+//Fin zona Busquedas
 }

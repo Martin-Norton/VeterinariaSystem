@@ -42,3 +42,15 @@
     <a href="@Url.Action("BuscarPorMascota")">Buscar Turnos por Mascota</a>
     <a href="@Url.Action("ObtenerPorMascota")">Buscar Todos los Turnos por Mascota</a>
 </div>
+<div class="mt-4">
+    <nav>
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.Pagina ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pagina="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
